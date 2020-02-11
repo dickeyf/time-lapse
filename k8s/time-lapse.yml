@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: birdhouse-secret
+data:
+  username: "YmlyZGhvdXNlYWdlbnQ="
+  password: "MVBpZ2VvbiE="
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: motion-detect-deployment
+  labels:
+    app: motion-detect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: motion-detect
+  template:
+    metadata:
+      labels:
+        app: motion-detect
+    spec:
+      containers:
+      - name: motion-detect
+        image: registry.gitlab.com/dickeyf/motion-detect:latest
+        env:
+        - name: VMR_HOST
+          value: "vmr.dickey.cloud"
+        - name: MQTT_PORT
+          value: "32452"
+        - name: MQTT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: birdhouse-secret
+              key: username
+        - name: MQTT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: birdhouse-secret
+              key: password

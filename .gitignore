@@ -1,0 +1,8 @@
+venv/
+lib/
+bin/
+*.jpeg
+.idea/
+.DS_Store
+k8s/time-lapse.yml
+test-store/*
