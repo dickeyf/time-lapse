@@ -10,7 +10,7 @@ import time
 # defaults to 1 hour backlog (At 5 frames/second)
 buffer_limit = 1000000
 time_lapse_buffer = []
-
+store_location = "./test-store/"
 
 def insert_picture(picture):
     time_lapse_buffer.append(picture)
@@ -45,8 +45,7 @@ def on_message(client, userdata, msg):
         payload = json.loads(json_payload)
         payload["picture"] = base64.b64decode(payload["picture"])
         x = time.strptime(payload["timestamp"], '%Y-%m-%dT%H:%M:%S.%f+0000')
-        payload["seconds"] = datetime.timedelta(year=x.tm_year, days=x.tm_yday, hours=x.tm_hour, minutes=x.tm_min,
-                           seconds=x.tm_sec).total_seconds()
+        payload["seconds"] = datetime.timedelta(year=x.tm_year, days=x.tm_yday, hours=x.tm_hour, minutes=x.tm_min, seconds=x.tm_sec).total_seconds()
         insert_picture(payload)
 
     #Handle motion detected events here
@@ -61,11 +60,18 @@ def on_message(client, userdata, msg):
         endTimeSecs = datetime.timedelta(year=x.tm_year,days=x.tm_yday,hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
         print("Fetching time-lapse frames from ", startTimeSecs, " seconds to ", endTimeSecs, "seconds.")
         timelapse = get_timelapse(startTimeSecs, endTimeSecs)
+        newFile = open(store_location + str(startTimeSecs) + "-" + str(endTimeSecs) + ".mjpeg", "wb")
+        for frame in timelapse:
+            newFile.write(frame)
+        newFile.close()
 
 
 # Specifying the frame limit is optional
 if "FRAME_LIMIT" in os.environ:
     buffer_limit = os.environ["FRAME_LIMIT"]
+
+if "STORE" in os.environ:
+    store_location = os.environ["STORE"]
 
 # Collect the Solace PubSub+ connection parameters from the ENV vars
 vmr_host = os.environ["VMR_HOST"]
