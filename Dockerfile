@@ -4,4 +4,4 @@ RUN pip install numpy opencv-contrib-python-headless opencv-python-headless paho
 
 ADD time-lapse.py /
 
-CMD [ "python", "./motion-detect.py" ]
+CMD [ "python", "./time-lapse.py" ]
