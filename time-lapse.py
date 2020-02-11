@@ -118,4 +118,4 @@ client.connect(vmr_host, int(mqtt_port), 60)
 # manual interface.
 client.loop_start()
 
-app.run()
+app.run(host='0.0.0.0')
