@@ -9,22 +9,22 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: motion-detect-deployment
+  name: time-lapse-deployment
   labels:
-    app: motion-detect
+    app: time-lapse
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: motion-detect
+      app: time-lapse
   template:
     metadata:
       labels:
-        app: motion-detect
+        app: time-lapse
     spec:
       containers:
-      - name: motion-detect
-        image: registry.gitlab.com/dickeyf/motion-detect:latest
+      - name: time-lapse
+        image: registry.gitlab.com/dickeyf/time-lapse:latest
         env:
         - name: VMR_HOST
           value: "__VMR_HOST__"
