@@ -1,16 +1,17 @@
-# Motion detection from https://software.intel.com/en-us/node/754940
-
 import json
 import base64
 import os
 import paho.mqtt.client as mqtt
 import datetime
 import time
+import cv2
+import numpy as np
 
 # defaults to 1 hour backlog (At 5 frames/second)
 buffer_limit = 1000000
 time_lapse_buffer = []
 store_location = "./test-store/"
+
 
 def insert_picture(picture):
     time_lapse_buffer.append(picture)
@@ -33,9 +34,15 @@ def on_connect(client, userdata, flags, rc):
 def get_timelapse(startTimeSecs, endTimeSecs):
     timelapse = []
     for frame in time_lapse_buffer:
-        if frame["seconds"] >= startTimeSecs and frame["seconds"] <= endTimeSecs:
+        if startTimeSecs <= frame["seconds"] <= endTimeSecs:
             timelapse.append(frame["picture"])
     return timelapse
+
+
+def get_opencv_img_from_buffer(buffer, flags):
+    bytes_as_np_array = np.frombuffer(buffer, dtype=np.uint8)
+    return cv2.imdecode(bytes_as_np_array, flags)
+
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -45,25 +52,31 @@ def on_message(client, userdata, msg):
         payload = json.loads(json_payload)
         payload["picture"] = base64.b64decode(payload["picture"])
         x = time.strptime(payload["timestamp"], '%Y-%m-%dT%H:%M:%S.%f+0000')
-        payload["seconds"] = datetime.timedelta(year=x.tm_year, days=x.tm_yday, hours=x.tm_hour, minutes=x.tm_min, seconds=x.tm_sec).total_seconds()
+        payload["seconds"] = datetime.timedelta(days=x.tm_yday, hours=x.tm_hour, minutes=x.tm_min, seconds=x.tm_sec).total_seconds()
         insert_picture(payload)
 
-    #Handle motion detected events here
+    # Handle motion detected events here
     if msg.topic.startswith("dickeycloud/birdhouse/motion/v1/"):
         json_payload = msg.payload
         payload = json.loads(json_payload)
-        startTime = payload["begin_timestamp"]
-        endTime = payload["end_timestamp"]
-        x = time.strptime(startTime, '%Y-%m-%dT%H:%M:%S.%f+0000')
-        startTimeSecs = datetime.timedelta(year=x.tm_year,days=x.tm_yday,hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
-        x = time.strptime(endTime, '%Y-%m-%dT%H:%M:%S.%f+0000')
-        endTimeSecs = datetime.timedelta(year=x.tm_year,days=x.tm_yday,hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds()
-        print("Fetching time-lapse frames from ", startTimeSecs, " seconds to ", endTimeSecs, "seconds.")
-        timelapse = get_timelapse(startTimeSecs, endTimeSecs)
-        newFile = open(store_location + str(startTimeSecs) + "-" + str(endTimeSecs) + ".mjpeg", "wb")
-        for frame in timelapse:
-            newFile.write(frame)
-        newFile.close()
+        start_time = payload["begin_timestamp"]
+        end_time = payload["end_timestamp"]
+        x = time.strptime(start_time, '%Y-%m-%dT%H:%M:%S.%f+0000')
+        start_time_secs = datetime.timedelta(
+            days=x.tm_yday, hours=x.tm_hour, minutes=x.tm_min, seconds=x.tm_sec).total_seconds()
+        x = time.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%f+0000')
+        end_time_secs = datetime.timedelta(
+            days=x.tm_yday, hours=x.tm_hour, minutes=x.tm_min, seconds=x.tm_sec).total_seconds()
+        print("Fetching time-lapse frames from ", start_time_secs, " seconds to ", end_time_secs, "seconds.")
+        time_lapse = get_timelapse(start_time_secs, end_time_secs)
+        if len(time_lapse) > 0:
+            frame_rate = len(time_lapse) / (1 + end_time_secs - start_time_secs)
+            codec = cv2.VideoWriter_fourcc(*'MP4V')
+            writer = cv2.VideoWriter(store_location + str(start_time_secs) + "-" + str(end_time_secs) + ".mp4", codec,
+                                     frame_rate, (640, 480))
+            for frame in time_lapse:
+                writer.write(get_opencv_img_from_buffer(frame, cv2.IMREAD_COLOR))
+            writer.release()
 
 
 # Specifying the frame limit is optional
