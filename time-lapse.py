@@ -15,7 +15,16 @@ store_location = "./test-store/"
 app = Flask(__name__)
 
 
-@app.route('/video/<path:filename>')
+@app.route('/videos')
+def get_video_list():
+    files = [f for f in os.listdir(store_location) if os.path.isfile(os.path.join(store_location, f))]
+    data = {
+        "data": files
+    }
+    return json.dumps(data)
+
+
+@app.route('/videos/<path:filename>')
 def get_video(filename):
     return send_file(store_location + filename, as_attachment=True)
 
