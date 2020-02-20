@@ -87,7 +87,7 @@ def on_message(client, userdata, msg):
         time_lapse = get_timelapse(start_time_secs, end_time_secs)
         if len(time_lapse) > 0:
             frame_rate = len(time_lapse) / (1 + end_time_secs - start_time_secs)
-            codec = cv2.VideoWriter_fourcc(*'mp4v')
+            codec = cv2.VideoWriter_fourcc(*'H264')
             filename = str(start_time_secs) + "-" + str(end_time_secs) + ".mp4"
             writer = cv2.VideoWriter(store_location + filename, codec,
                                      frame_rate, (640, 480))
