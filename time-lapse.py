@@ -13,8 +13,6 @@ buffer_limit = 1000000
 time_lapse_buffer = []
 store_location = "./test-store/"
 app = Flask(__name__)
-mp4_store = os.path.join(store_location, "mp4")
-os.mkdir(mp4_store)
 
 @app.route('/videos')
 def get_video_list():
@@ -113,6 +111,9 @@ if "FRAME_LIMIT" in os.environ:
 
 if "STORE" in os.environ:
     store_location = os.environ["STORE"]
+
+mp4_store = os.path.join(store_location, "mp4")
+os.mkdir(mp4_store)
 
 # Collect the Solace PubSub+ connection parameters from the ENV vars
 vmr_host = os.environ["VMR_HOST"]
