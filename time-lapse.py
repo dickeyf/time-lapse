@@ -13,7 +13,8 @@ buffer_limit = 1000000
 time_lapse_buffer = []
 store_location = "./test-store/"
 app = Flask(__name__)
-
+mp4_store = os.path.join(store_location, "mp4")
+os.mkdir(mp4_store)
 
 @app.route('/videos')
 def get_video_list():
@@ -87,13 +88,18 @@ def on_message(client, userdata, msg):
         time_lapse = get_timelapse(start_time_secs, end_time_secs)
         if len(time_lapse) > 0:
             frame_rate = len(time_lapse) / (1 + end_time_secs - start_time_secs)
-            codec = cv2.VideoWriter_fourcc(*'H264')
+            codec = cv2.VideoWriter_fourcc(*'mp4v')
             filename = str(start_time_secs) + "-" + str(end_time_secs) + ".mp4"
-            writer = cv2.VideoWriter(store_location + filename, codec,
+            mp4_path = mp4_store + "/" + filename
+            h264_path = store_location + filename
+            writer = cv2.VideoWriter(mp4_path, codec,
                                      frame_rate, (640, 480))
             for frame in time_lapse:
                 writer.write(get_opencv_img_from_buffer(frame, cv2.IMREAD_COLOR))
             writer.release()
+
+            os.system(f"ffmpeg -y -i {mp4_path} -vcodec libx264 {h264_path}")
+
             new_video_event = {
                 "begin_timestamp": payload["begin_timestamp"],
                 "end_timestamp": payload["end_timestamp"],
