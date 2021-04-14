@@ -7,6 +7,7 @@ import time
 import cv2
 import numpy as np
 from flask import Flask, send_file
+from pathlib import Path
 
 # defaults to 1 hour backlog (At 5 frames/second)
 buffer_limit = 1000000
@@ -115,7 +116,7 @@ if "STORE" in os.environ:
     store_location = os.environ["STORE"]
 
 mp4_store = os.path.join(store_location, "mp4")
-os.mkdir(mp4_store)
+Path(mp4_store).mkdir(parents=True, exist_ok=True)
 
 # Collect the Solace PubSub+ connection parameters from the ENV vars
 vmr_host = os.environ["VMR_HOST"]
