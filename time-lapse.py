@@ -14,6 +14,7 @@ time_lapse_buffer = []
 store_location = "./test-store/"
 app = Flask(__name__)
 
+
 @app.route('/videos')
 def get_video_list():
     files = [f for f in os.listdir(store_location) if os.path.isfile(os.path.join(store_location, f))]
@@ -40,10 +41,10 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
     # Subscribe to previews feed, this is what we store
-    client.subscribe("dickeycloud/birdhouse/previews/v1/1")
+    client.subscribe("lego/robot/hamster/events/video")
 
     # Subscribe to motion detection events, this is what makes us dump a time-lapse mjpeg
-    client.subscribe("dickeycloud/birdhouse/motion/v1/1")
+    client.subscribe("lego/motion-detector/hamster/events/motion")
 
 
 def get_timelapse(startTimeSecs, endTimeSecs):
@@ -62,7 +63,7 @@ def get_opencv_img_from_buffer(buffer, flags):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     # Handle preview streams here
-    if msg.topic.startswith("dickeycloud/birdhouse/previews/v1/"):
+    if msg.topic.startswith("lego/robot/hamster/events/video"):
         json_payload = msg.payload
         payload = json.loads(json_payload)
         payload["picture"] = base64.b64decode(payload["picture"])
@@ -71,7 +72,7 @@ def on_message(client, userdata, msg):
         insert_picture(payload)
 
     # Handle motion detected events here
-    if msg.topic.startswith("dickeycloud/birdhouse/motion/v1/"):
+    if msg.topic.startswith("lego/motion-detector/hamster/events/motion"):
         json_payload = msg.payload
         payload = json.loads(json_payload)
         start_time = payload["begin_timestamp"]
@@ -104,6 +105,7 @@ def on_message(client, userdata, msg):
                 "filename": filename
             }
             client.publish("dickeycloud/birdhouse/video/v1/1", json.dumps(new_video_event))
+
 
 # Specifying the frame limit is optional
 if "FRAME_LIMIT" in os.environ:
