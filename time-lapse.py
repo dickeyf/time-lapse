@@ -110,7 +110,8 @@ def on_message(client, userdata, msg):
 
 # Specifying the frame limit is optional
 if "FRAME_LIMIT" in os.environ:
-    buffer_limit = os.environ["FRAME_LIMIT"]
+    buffer_limit = int(os.environ["FRAME_LIMIT"])
+
 
 if "STORE" in os.environ:
     store_location = os.environ["STORE"]
