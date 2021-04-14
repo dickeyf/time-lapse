@@ -33,8 +33,8 @@ def get_video(filename):
 def insert_picture(picture):
     time_lapse_buffer.append(picture)
     # Trim the buffer FIFO way when we exceed our limit
-    if len(buffer_limit) > buffer_limit:
-        buffer_limit.pop(0)
+    if len(time_lapse_buffer) > buffer_limit:
+        time_lapse_buffer.pop(0)
 
 
 # The callback for when the client receives a CONNACK response from the server.
