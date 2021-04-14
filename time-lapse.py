@@ -104,7 +104,7 @@ def on_message(client, userdata, msg):
                 "end_timestamp": payload["end_timestamp"],
                 "filename": filename
             }
-            client.publish("dickeycloud/birdhouse/video/v1/1", json.dumps(new_video_event))
+            client.publish("lego/time-lapse/hamster/events/video", json.dumps(new_video_event))
 
 
 # Specifying the frame limit is optional
